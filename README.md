@@ -4,3 +4,16 @@
 - Then type: python run.py test LexerSuite
 - Then type: python run.py test ParserSuite
 - Then type: python run.py test ASTGenSuite
+
+# CHECK ASSIGNMENT
+
+## visitClassDecl
+- check error `Redeclared` the new class
+- check error `Undeclared` the parent of new class 
+
+## visitMethodDecl
+
+## visitAttributeDecl
+
+## visitProgram
+- add one existed class `io` to the completely new program
