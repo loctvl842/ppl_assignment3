@@ -1,0 +1,7 @@
+
+        class Ex
+        {
+            int my1Var = 2 + 3;
+            static float my1Var;
+            int a() {}
+        }

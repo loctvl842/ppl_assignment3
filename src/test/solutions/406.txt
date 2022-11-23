@@ -1,0 +1,1 @@
+Type Mismatch In Constant Declaration: ConstDecl(Id(a),StringType,BinaryOp(+,FloatLit(2.0),IntLit(3)))

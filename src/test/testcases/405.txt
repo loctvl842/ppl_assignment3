@@ -1,0 +1,5 @@
+
+        class C {
+            string a = 2.0 + 3;
+        }
+        

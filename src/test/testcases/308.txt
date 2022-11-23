@@ -1,0 +1,5 @@
+
+class test extends loc {
+    static int a = 2, b, c;
+    float d, e;
+}

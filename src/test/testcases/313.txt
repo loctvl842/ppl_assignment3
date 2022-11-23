@@ -1,0 +1,5 @@
+
+class test extends loc {
+    static int a, b, c;
+    final string d = "loc" ^ "van";
+}

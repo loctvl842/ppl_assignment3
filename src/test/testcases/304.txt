@@ -1,0 +1,4 @@
+
+class test extends loc {
+    int a;
+}

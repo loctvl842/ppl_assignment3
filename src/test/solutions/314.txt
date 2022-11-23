@@ -1,0 +1,1 @@
+Program([ClassDecl(Id(test),[AttributeDecl(Instance,VarDecl(Id(a),IntType)),MethodDecl(Id(toString),Instance,[],StringType,Block([],[]))])])

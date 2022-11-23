@@ -1,0 +1,1 @@
+Type Mismatch In Constant Declaration: ConstDecl(Id(a),FloatType,BinaryOp(^,StringLit(van),StringLit(loc)))
