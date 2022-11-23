@@ -1,0 +1,8 @@
+
+        class C {
+            int a;
+            float b;
+            string c;
+            final float x = c;
+        }
+        

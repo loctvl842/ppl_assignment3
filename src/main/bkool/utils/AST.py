@@ -232,7 +232,7 @@ class Static(SIKind):
 
 # used for a normal or special method declaration. 
 # In the case of special method declaration,the name will be Id("<init>") 
-# and the return type is VoidType(). 
+# and the return type is VoidType()
 # In the case of normal method declaration, the name and the return type are from the declaration.
 @dataclass
 class MethodDecl(MemDecl):

@@ -1,0 +1,6 @@
+
+        class C {
+            string a;
+            float x = a + 2;
+        }
+        

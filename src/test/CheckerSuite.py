@@ -38,7 +38,7 @@ class CheckerSuite(unittest.TestCase):
     #         B x = v + v;
     #     }
     #     """
-    #     expect = "Type Mismatch In Statement: AssignStmt(Id(x),BinaryOp(+,Id(v),Id(v)))"
+    #     expect = "Type Mismatch In Expression: BinaryOp(+,Id(v),Id(v))"
     #     self.assertTrue(TestChecker.test(input, expect, 403))
 
     # def test_5(self):
@@ -117,12 +117,73 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),FloatType,BinaryOp(^,StringLit(van),StringLit(loc)))"
     #     self.assertTrue(TestChecker.test(input, expect, 411))
 
-    def test_13(self):
-        input = """
-        class C {
-            string x = 2;
-            final float a = x + 3;
-        }
-        """
-        expect = "Type Mismatch In Expression: BinaryOp(^,Id(x),IntLit(3))"
-        self.assertTrue(TestChecker.test(input, expect, 412))
+    # def test_13(self):
+    #     input = """
+    #     class C {
+    #         string x;
+    #         float x;
+    #     }
+    #     """
+    #     expect = "Redeclared Attribute: x"
+    #     self.assertTrue(TestChecker.test(input, expect, 412))
+
+    # def test_14(self):
+    #     input = """
+    #     class C {
+    #         string x;
+    #         float x;
+    #     }
+    #     """
+    #     expect = "Redeclared Attribute: x"
+    #     self.assertTrue(TestChecker.test(input, expect, 413))
+
+    # def test_15(self):
+    #     input = """
+    #     class C {
+    #         string a;
+    #         float x = a + 2;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: BinaryOp(+,Id(a),IntLit(2))"
+    #     self.assertTrue(TestChecker.test(input, expect, 414))
+
+    # def test_16(self):
+    #     input = """
+    #     class C {
+    #         int a;
+    #         float b;
+    #         string c;
+    #         final float x = c;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(x),FloatType,Id(c))"
+    #     self.assertTrue(TestChecker.test(input, expect, 415))
+
+    # def test_17(self):
+    #     input = """
+    #     class C {
+    #         string d;
+    #         final float x = c;
+    #     }
+    #     """
+    #     expect = "Undeclared Identifier: c"
+    #     self.assertTrue(TestChecker.test(input, expect, 416))
+
+    # def test_18(self):
+    #     input = """
+    #     class C {
+    #         float c;
+    #         int c() {}
+    #     }
+    #     """
+    #     expect = "Redeclared Method: c"
+    #     self.assertTrue(TestChecker.test(input, expect, 417))
+
+    # def test_19(self):
+    #     input = """
+    #     class C {
+    #         int a(int a; int b; float d; string e; bool f; string a) {}
+    #     }
+    #     """
+    #     expect = "Redeclared Parameter: a"
+    #     self.assertTrue(TestChecker.test(input, expect, 418))
