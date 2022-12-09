@@ -8,6 +8,7 @@
 # SUPPORT METHODS
 
 ## getASTName()
+
 ```python
     ### `getASTName` function used to get name of AST object
     ## @param targetObj can be type of MemDecl(AttributeDecl, MethodDecl) or StoreDecl(ConstDecl, VarDecl)
@@ -54,6 +55,7 @@
     ## @return True/False
     def checkStoreExist(self, variable: str, decls: List[StoreDecl]):
 ```
+
 ## searchClass()
 
 ```python
@@ -76,10 +78,12 @@
 # CHECK ASSIGNMENT
 
 ## visitId
-> `additional param` varDecls: List[VarDecl] (can be list of `StoreDecl`[VarDecl, ConstDecl] or list of `MemDecl`[AttributeDecl,MethodDecl]) 
+
+> `additional param` varDecls: List[VarDecl] (can be list of `StoreDecl`[VarDecl, ConstDecl] or list of `MemDecl`[AttributeDecl,MethodDecl])
 
 > `return` Type() can be `IntType()`, `StringType()`, `FloatType()`, `BoolType()`, `VoidType()`
-- check error `Undeclared(Identifier(), ast.name)` check if `id` exist
+
+- check error `Undeclared(Identifier(), ast.name)` (this function only check this type of error because the `id` checked here is the `id` used in `expr`; `id` like `classname` or `methodname` have to be checked in its own function for example: `visitClassDecl`, `visitMethodDecl`, ... )
 
 ## visitBinaryOp
 
@@ -87,16 +91,32 @@
 
 > `return` Type() can be `IntType()`, `StringType()`, `FloatType()`, `BoolType()`
 
+## visitArrayLiteral
+
+> `return` ArrayType()
+
+- check error `IllegalArrayLiteral(arr)`: check if element have the same type
+
+## visitAssign
+
+> `additional param` decls: list of all `StoreDecl` (may include some `parameter` in `MethodDecl()` and from parent scope)
+
+- check error `Undeclared(Identifier(), name)` if the assigned id is not declared
+
 ## visitVarDecl
 
 > `additional param` varDecls: List (can be list of `StoreDecl` or list of `MemDecl`)
 
 - check error `Redeclared(Variable(), variable)` if `varDecls` is the list of `StoreDecl`
 - check error `TypeMismatchInStatement(Assign(lhs,exp))` **dunno what the exactly error type (just sure that TypeMismatch)**
+- if `lhs` and `rhs` are the same `Type`. We have to check if they are `ClassType` so check if `rhs` is kid of `lhs`; or if they are `ArrayType` so check if element of `rhs` and `lhs` have the same type or not
 
 ## visitBlock
 
+> `additional param` decls: list of all `StoreDecl` (may include some `parameter` in `MethodDecl()` and from parent scope)
 
+- check error `Redeclared()` in list of `StoreDecl` (just check between `decls` of `Block`)
+- check error `Undeclared()` in list of `Stmt` (based on list of decls of Block combine with decls of `additional param`)
 
 ## visitConstDecl
 
@@ -116,6 +136,7 @@
 
 - check error `Redeclared(Method(), methodName)` of the new method
 - check error `Redeclared(Parameter(),paramName)` in list of params
+- check error `Redeclared(StoreDecl, name)` in list of decls of `Block` (only if `StoreDecl` exist in list of `parameters`)
 
 ## visitAttributeDecl
 
