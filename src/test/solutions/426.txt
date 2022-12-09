@@ -1,0 +1,1 @@
+Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(3,FloatType),[FloatLit(2.3),FloatLit(102e3)])

@@ -235,15 +235,17 @@ class ASTGeneration(BKOOLVisitor):
     # Array Type
     def visitArray_type(self, ctx: BKOOLParser.Array_typeContext):
         if ctx.INT():
-            return ArrayType(ctx.INT_LIT().getText(), IntType())
+            return ArrayType(int(ctx.INT_LIT().getText()), IntType())
         if ctx.FLOAT():
-            return ArrayType(ctx.INT_LIT().getText(), FloatType())
+            return ArrayType(int(ctx.INT_LIT().getText()), FloatType())
         if ctx.BOOLEAN():
-            return ArrayType(ctx.INT_LIT().getText(), BoolType())
+            return ArrayType(int(ctx.INT_LIT().getText()), BoolType())
         if ctx.STRING():
-            return ArrayType(ctx.INT_LIT().getText(), StringType())
+            return ArrayType(int(ctx.INT_LIT().getText()), StringType())
         if ctx.ID():
-            return ArrayType(ctx.INT_LIT().getText(), ClassType(Id(ctx.ID().getText())))
+            return ArrayType(
+                int(ctx.INT_LIT().getText()), ClassType(Id(ctx.ID().getText()))
+            )
 
     # -- 5 --
     # Expression

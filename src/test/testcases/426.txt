@@ -1,0 +1,5 @@
+
+        class C {
+            final float[3] a = {2.3, 102e3};
+        }
+        

@@ -1,0 +1,7 @@
+
+        class C {
+            int a(int a; int b; float d) {
+                int a;
+            }
+        }
+        

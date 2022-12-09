@@ -3,11 +3,11 @@
  * Student's name: Le Tran Phuc Loc
  * Student's ID: 2013684
 """
+from array import ArrayType
 from AST import *
 from Visitor import *
 from Utils import Utils
 from StaticError import *
-from typing import List, Tuple
 
 
 class MType:
@@ -126,6 +126,20 @@ class StaticChecker(BaseVisitor, Utils):
 
         return None
 
+    def checkTypeMatch(self, lhsType: Type, rhsType: Type):
+        if type(lhsType) != type(rhsType):
+            return False
+        else:
+            if isinstance(lhsType, ClassType) and isinstance(rhsType, ClassType):
+                lhsTypeClassName = lhsType.classname.name
+                rhsTypeClassName = rhsType.classname.name
+                return self.checkIsKidOf(rhsTypeClassName, lhsTypeClassName)
+            if isinstance(lhsType, ArrayType) and isinstance(rhsType, ArrayType):
+                if lhsType.size != rhsType.size:
+                    return False
+                return self.checkTypeMatch(lhsType.eleType, rhsType.eleType)
+            return True
+
     def visitId(self, ast: Id, varDecls: List[VarDecl]):
         searchedDecl = self.searchVarDecl(ast.name, varDecls)
         if isinstance(searchedDecl, VarDecl):
@@ -212,6 +226,20 @@ class StaticChecker(BaseVisitor, Utils):
     def visitBooleanLiteral(self, ast: BooleanLiteral, temp):
         return BoolType()
 
+    def visitArrayLiteral(self, ast: ArrayLiteral, temp):
+        eleType = ast.value[0].accept(self, temp)
+        for v in ast.value:
+            vType = v.accept(self, temp)
+            if not (
+                self.checkTypeMatch(vType, eleType)
+                and self.checkTypeMatch(eleType, vType)
+            ):
+                raise IllegalArrayLiteral(ast)
+        return ArrayType(len(ast.value), eleType)
+
+    def visitAssign(self, ast: Assign, decls: List[StoreDecl]):
+        pass
+
     def visitVarDecl(self, ast: VarDecl, decls: List):
         variable = ast.variable.name
         varType = ast.varType
@@ -224,23 +252,32 @@ class StaticChecker(BaseVisitor, Utils):
         varDecl = VarDecl(Id(variable), varType)
 
         if varInit:
-            if type(varType) != type(varInit):
-                if not (
-                    isinstance(varType, FloatType) and isinstance(varInit, IntType)
-                ):
-                    raise TypeMismatchInStatement(Assign(Id(variable), ast.varInit))
-            else:
-                if isinstance(varType, ClassType) and isinstance(varInit, ClassType):
-                    varTypeClassName = varType.classname.name
-                    varInitClassName = varInit.classname.name
-                    if not self.checkIsKidOf(varInitClassName, varTypeClassName):
-                        raise TypeMismatchInStatement(Assign(Id(variable), ast.varInit))
+            if not self.checkTypeMatch(varType, varInit):
+                raise TypeMismatchInStatement(Assign(Id(variable), ast.varInit))
             varDecl.varInit = varInit
 
         return varDecl
 
-    def visitBlock(self, ast: Block, decls: List[VarDecl]):
-        pass
+    def visitBlock(self, ast: Block, decls: List[StoreDecl]):
+        # check Redeclared between decls in Block
+        blockDeclNames = []
+        blockDecls = ast.decl
+        for decl in blockDecls:
+            declName = self.getASTName(decl)
+            if declName in blockDeclNames:
+                if isinstance(decl, ConstDecl):
+                    raise Redeclared(Constant(), declName)
+                else:
+                    raise Redeclared(Variable(), declName)
+            blockDeclNames.append(declName)
+            decls.append(decl)
+
+        # check statements
+        blockStmts = ast.stmt
+        for stmt in blockStmts:
+            stmt.accept(self, decls)
+
+        return ast
 
     def visitConstDecl(self, ast: ConstDecl, decls: List):
         constant = ast.constant.name
@@ -250,18 +287,9 @@ class StaticChecker(BaseVisitor, Utils):
         if len(decls) > 0 and isinstance(decls[0], StoreDecl):
             if self.checkStoreExist(constant, decls):
                 raise Redeclared(Constant(), constant)
+        if not self.checkTypeMatch(constType, value):
+            raise TypeMismatchInConstant(ast)
 
-        if type(constType) != type(value):
-            if not (isinstance(constType, FloatType) and isinstance(value, IntType)):
-                raise TypeMismatchInConstant(ast)
-        else:
-            if isinstance(constType, ClassType) and isinstance(value, ClassType):
-                constTypeClassName = constType.classname.name
-                valueClassName = value.classname.name
-                if not self.checkIsKidOf(valueClassName, constTypeClassName):
-                    raise TypeMismatchInConstant(ast)
-
-        print("ok in visitConstDecl")
         return ast
 
     def visitClassDecl(self, ast: ClassDecl, classDecls: List[ClassDecl]):
@@ -297,6 +325,15 @@ class StaticChecker(BaseVisitor, Utils):
                 raise Redeclared(Parameter(), pName)
             paramNames.append(pName)
             decls.append(p)
+
+        blockDecls = ast.body.decl
+        for decl in blockDecls:
+            declName = self.getASTName(decl)
+            if declName in paramNames:
+                if isinstance(decl, VarDecl):
+                    raise Redeclared(Variable(), declName)
+                else:
+                    raise Redeclared(Constant(), declName)
 
         ast.body.accept(self, decls)
         return ast

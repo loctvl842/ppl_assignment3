@@ -187,3 +187,82 @@ class CheckerSuite(unittest.TestCase):
     #     """
     #     expect = "Redeclared Parameter: a"
     #     self.assertTrue(TestChecker.test(input, expect, 418))
+
+    # def test_20(self):
+    #     input = """
+    #     class C {
+    #         int a(int a; int b; float d) {
+    #             int a;
+    #         }
+    #     }
+    #     """
+    #     expect = "Redeclared Variable: a"
+    #     self.assertTrue(TestChecker.test(input, expect, 419))
+
+    # def test_21(self):
+    #     input = """
+    #     class C {
+    #         int a(int a; int b; float d) {
+    #             final int b = 2;
+    #         }
+    #     }
+    #     """
+    #     expect = "Redeclared Constant: b"
+    #     self.assertTrue(TestChecker.test(input, expect, 420))
+
+    # def test_22(self):
+    #     input = """
+    #     class C {
+    #         int a(int a; int b; float d) {
+    #             final int c = 2;
+    #             string c;
+    #         }
+    #     }
+    #     """
+    #     expect = "Redeclared Variable: c"
+    #     self.assertTrue(TestChecker.test(input, expect, 421))
+
+    # def test_23(self):
+    #     input = """
+    #     class C {
+    #         final int a = {1, 2, 3};
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),IntType,[IntLit(1),IntLit(2),IntLit(3)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 422))
+
+    # def test_24(self):
+    #     input = """
+    #     class C {
+    #         final float[2] a = {1, 2, 3};
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(2,FloatType),[IntLit(1),IntLit(2),IntLit(3)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 423))
+
+    # def test_25(self):
+    #     input = """
+    #     class C {
+    #         float[2] a = {1, 2, 3};
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: AssignStmt(Id(a),[IntLit(1),IntLit(2),IntLit(3)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 424))
+
+    # def test_26(self):
+    #     input = """
+    #     class C {
+    #         final float[3] a = {2.3, 4, 102e3};
+    #     }
+    #     """
+    #     expect = "Illegal Array Literal: [FloatLit(2.3),IntLit(4),FloatLit(102e3)]"
+    #     self.assertTrue(TestChecker.test(input, expect, 425))
+
+    # def test_27(self):
+    #     input = """
+    #     class C {
+    #         final float[3] a = {2.3, 102e3};
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(3,FloatType),[FloatLit(2.3),FloatLit(102e3)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 426))
