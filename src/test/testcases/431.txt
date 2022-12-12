@@ -1,0 +1,9 @@
+
+        class C {
+            static float a;
+        }
+        class B {
+            C x;
+            final int z = x.a;
+        }
+        

@@ -1,0 +1,10 @@
+
+        class C {
+            static float a;
+        }
+        class B {
+            C x;
+            int y;
+            final int z = y.a;
+        }
+        

@@ -1,0 +1,10 @@
+
+        class C {
+            int a;
+        }
+        class B {
+            C x;
+            int y;
+            int z = x.a + y.a;
+        }
+        

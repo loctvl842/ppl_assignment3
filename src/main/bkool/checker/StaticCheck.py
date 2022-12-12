@@ -4,10 +4,12 @@
  * Student's ID: 2013684
 """
 from array import ArrayType
+from re import error
 from AST import *
 from Visitor import *
 from Utils import Utils
 from StaticError import *
+from typing import List
 
 
 class MType:
@@ -46,8 +48,10 @@ class StaticChecker(BaseVisitor, Utils):
     ### `getASTName` function used to get name of AST object
     ## @param targetObj can be type of AttributeDecl, MethodDecl, VarDecl, ConstDecl
     ## @return name type str
-    def getASTName(self, targetObj):
-        if isinstance(targetObj, AttributeDecl):
+    def getASTName(self, targetObj) -> str:
+        if isinstance(targetObj, Id):
+            return targetObj.name
+        elif isinstance(targetObj, AttributeDecl):
             return self.getASTName(targetObj.decl)
         elif isinstance(targetObj, MethodDecl):
             return targetObj.name.name
@@ -55,36 +59,51 @@ class StaticChecker(BaseVisitor, Utils):
             return targetObj.variable.name
         elif isinstance(targetObj, ConstDecl):
             return targetObj.constant.name
+        elif isinstance(targetObj, ClassDecl):
+            return targetObj.classname.name
+        elif isinstance(targetObj, FieldAccess):
+            return self.getASTName(targetObj.obj)
+        elif isinstance(targetObj, ArrayCell):
+            return self.getASTName(targetObj.arr)
+        elif isinstance(targetObj, CallExpr):
+            return self.getASTName(targetObj.obj)
+        elif isinstance(targetObj, ClassType):
+            return self.getASTName(targetObj.classname)
+        else:
+            return ""
 
-    ### `checkClassExist` function used to check if class exist or not
-    ## @param classname name of the class to check (type: str)
-    ## @param classDecls list of class existed
-    ## @return True/False
-    def checkClassExist(self, classname: str, classDecls: List[ClassDecl]):
-        if classname == "":
-            return False
-        for classDecl in classDecls:
-            if classDecl.classname.name == classname:
-                return True
-        return False
+    def getMemDeclType(self, memDecl: MemDecl):
+        if isinstance(memDecl, MethodDecl):
+            return memDecl.returnType
+        else:
+            storeDecl = memDecl.decl
+            if isinstance(storeDecl, VarDecl):
+                return storeDecl.varType
+            else:
+                return storeDecl.constType
 
-    ### `checkMemberExist` function used to check if member (can be attribute or method) exist within a class
-    ## @param targetMem name of member need to check (type: MemDecl)
-    ## @param memlist list of members need to check (type: List[MemDecl])
-    ## @return True/False
-    def checkMemberExist(self, targetMem: MemDecl, members: List[MemDecl]):
-        targetMemName = self.getASTName(targetMem)
-        for m in members:
-            if targetMemName == self.getASTName(m):
-                return True
-        return False
+    # @return MemDecl
+    def searchMemberOfClassByName(self, classDecl: ClassDecl, targetMemberName: str):
+        for mem in classDecl.memlist:
+            memName = self.getASTName(mem)
+            if memName == targetMemberName:
+                return mem
+        return None
+
+    # @return MemDecl
+    def searchMemberByName(self, targetMemberName: str):
+        for mem in self.classScopeMembers:
+            memName = self.getASTName(mem)
+            if memName == targetMemberName:
+                return mem
+        return None
 
     ### `checkIsKidOf` function used to check if an object is a child of another by query bottom down
     ## @param targetChildName is the child's name need to check (type: str)
     ## @param targetParentName is the parent's name need to check (type: str)
     ## @return True/False
     def checkIsKidOf(self, targetChildName: str, targetParentName: str):
-        searchedChildClass = self.searchClass(targetChildName)
+        searchedChildClass = self.searchClassByName(targetChildName)
         if searchedChildClass == None:
             raise Undeclared(Class(), targetChildName)
         else:
@@ -109,23 +128,26 @@ class StaticChecker(BaseVisitor, Utils):
     ### `searchClass` function used to find existed class
     ## @param classname type str
     ## @param ClassDecl
-    def searchClass(self, classname: str):
-        for classDecl in self.program.decl:
-            if classDecl.classname.name == classname:
-                return classDecl
+    def searchClassByName(self, name: str):
+        for decl in self.globalScopeDecls:
+            if self.getASTName(decl) == name:
+                return decl
         return None
 
     ### `searchVarDecl` function used to search a varDecl through name
     ## @param targetname name to search
     ## @param varDecls is list of varDecl that may contain varDecl with targetname
     ## @return VarDecl
-    def searchVarDecl(self, targetname: str, varDecls: List[VarDecl]):
-        for varDecl in varDecls:
-            if self.getASTName(varDecl) == targetname:
-                return varDecl
-
+    def searchDeclByName(self, targetname: str, decls: List[Decl]):
+        for decl in decls:
+            if self.getASTName(decl) == targetname:
+                return decl
         return None
 
+    ### `checkTypeMatch` function used to check if rhs has the same type to lhs or can be con be coerce to lhs
+    ## @param lhsType type Type (left hand side Type)
+    ## @param rhsType type Type (right hand side Type)
+    ## @return True/False
     def checkTypeMatch(self, lhsType: Type, rhsType: Type):
         if type(lhsType) != type(rhsType):
             return False
@@ -140,8 +162,8 @@ class StaticChecker(BaseVisitor, Utils):
                 return self.checkTypeMatch(lhsType.eleType, rhsType.eleType)
             return True
 
-    def visitId(self, ast: Id, varDecls: List[VarDecl]):
-        searchedDecl = self.searchVarDecl(ast.name, varDecls)
+    def visitId(self, ast: Id, visibleScopeDecls: List[Decl]):
+        searchedDecl = self.searchDeclByName(ast.name, visibleScopeDecls)
         if isinstance(searchedDecl, VarDecl):
             return searchedDecl.varType
         elif isinstance(searchedDecl, ConstDecl):
@@ -154,12 +176,14 @@ class StaticChecker(BaseVisitor, Utils):
                 return storeDecl.constType
         elif isinstance(searchedDecl, MethodDecl):
             return searchedDecl.returnType
+        elif isinstance(searchedDecl, ClassDecl):
+            return ClassType(ast.name)
         else:
             raise Undeclared(Identifier(), ast.name)
 
-    def visitBinaryOp(self, ast: BinaryOp, varDecls: List[VarDecl]):
-        leftOperandType = ast.left.accept(self, varDecls)
-        rightOperandType = ast.right.accept(self, varDecls)
+    def visitBinaryOp(self, ast: BinaryOp, visibleScopeDecls: List[Decl]):
+        leftOperandType = ast.left.accept(self, visibleScopeDecls)
+        rightOperandType = ast.right.accept(self, visibleScopeDecls)
 
         if ast.op in ["+", "-", "*", "/", "\\", "%"]:
             if not (
@@ -211,19 +235,64 @@ class StaticChecker(BaseVisitor, Utils):
                 raise TypeMismatchInExpression(ast)
             return StringType()
 
-    def visitUnaryOp(self, ast: UnaryOp, varDecls: List[VarDecl]):
-        return ast.body.accept(self, varDecls)
+    def visitUnaryOp(self, ast: UnaryOp, visibleScopeDecls: List[Decl]):
+        return ast.body.accept(self, visibleScopeDecls)
 
-    def visitIntLiteral(self, ast: IntLiteral, temp):
+    def visitCallExpr(self, ast: CallExpr, visibleScopeDecls: List[Decl]):
+        objName = self.getASTName(ast)
+        classDecl = self.searchClassByName(objName)
+        methodName = self.getASTName(ast.method)
+        searchedMem = None
+        if isinstance(ast.obj, SelfLiteral):
+            searchedMem = self.searchMemberByName(methodName)
+            if searchedMem == None or not isinstance(searchedMem, MethodDecl):
+                raise Undeclared(Method(), methodName)
+        for p in ast.param:
+            p.accept(self, visibleScopeDecls)
+        return self.getMemDeclType(searchedMem)
+
+    def visitNewExpr(self, ast: NewExpr, visibleScopeDecls: List[Decl]):
+        pass
+
+    def visitArrayCell(self, ast: ArrayCell, visibleScopeDecls: List[Decl]):
+        pass
+
+    def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]):
+        objName = self.getASTName(ast)
+        classDecl = self.searchClassByName(objName)
+        fieldname = self.getASTName(ast.fieldname)
+        searchedMem = None
+        if isinstance(ast.obj, SelfLiteral):
+            searchedMem = self.searchMemberByName(fieldname)
+            if searchedMem == None or not isinstance(searchedMem, AttributeDecl):
+                raise Undeclared(Attribute(), fieldname)
+        elif classDecl == None:
+            objType = ast.obj.accept(self, visibleScopeDecls)
+            if not isinstance(objType, ClassType):
+                raise IllegalMemberAccess(ast)
+            classDeclName = self.getASTName(objType)
+            classDecl = self.searchClassByName(classDeclName)
+            searchedMem = self.searchMemberOfClassByName(classDecl, fieldname)
+            if searchedMem == None:
+                raise IllegalMemberAccess(ast)
+        else:
+            searchedMem = self.searchMemberOfClassByName(classDecl, fieldname)
+            if searchedMem == None:
+                raise IllegalMemberAccess(ast)
+            if not isinstance(searchedMem.kind, Static):
+                raise IllegalMemberAccess(ast)
+        return self.getMemDeclType(searchedMem)
+
+    def visitIntLiteral(self, ast: IntLiteral, visibleScopeDecls: List[Decl]):
         return IntType()
 
-    def visitFloatLiteral(self, ast: FloatLiteral, temp):
+    def visitFloatLiteral(self, ast: FloatLiteral, visibleScopeDecls: List[Decl]):
         return FloatType()
 
-    def visitStringLiteral(self, ast: StringLiteral, temp):
+    def visitStringLiteral(self, ast: StringLiteral, visibleScopeDecls: List[Decl]):
         return StringType()
 
-    def visitBooleanLiteral(self, ast: BooleanLiteral, temp):
+    def visitBooleanLiteral(self, ast: BooleanLiteral, visibleScopeDecls: List[Decl]):
         return BoolType()
 
     def visitArrayLiteral(self, ast: ArrayLiteral, temp):
@@ -238,116 +307,140 @@ class StaticChecker(BaseVisitor, Utils):
         return ArrayType(len(ast.value), eleType)
 
     def visitAssign(self, ast: Assign, decls: List[StoreDecl]):
-        pass
+        lhsType = ast.accept(self, decls)
+        rhsType = ast.accept(self, decls)
+        if self.checkTypeMatch(lhsType, rhsType):
+            raise TypeMismatchInStatement(ast)
 
-    def visitVarDecl(self, ast: VarDecl, decls: List):
-        variable = ast.variable.name
+    def visitCallStmt(self, ast: CallStmt, decls: List[StoreDecl]):
+        print("loc")
+
+    def visitVarDecl(self, ast: VarDecl, visibleScopeDecls: list[StoreDecl]):
         varType = ast.varType
-        varInit = ast.varInit.accept(self, decls) if ast.varInit else None
-
-        if len(decls) > 0 and isinstance(decls[0], StoreDecl):
-            if self.checkStoreExist(variable, decls):
-                raise Redeclared(Variable(), variable)
-
-        varDecl = VarDecl(Id(variable), varType)
+        varInit = ast.varInit.accept(self, visibleScopeDecls) if ast.varInit else None
 
         if varInit:
             if not self.checkTypeMatch(varType, varInit):
-                raise TypeMismatchInStatement(Assign(Id(variable), ast.varInit))
-            varDecl.varInit = varInit
+                raise TypeMismatchInStatement(Assign(ast.variable, ast.varInit))
+        return ast
 
-        return varDecl
-
-    def visitBlock(self, ast: Block, decls: List[StoreDecl]):
+    # @param visibleScopeDecls can be methodScopeDecls or blockScopeDecls
+    def visitBlock(self, ast: Block, visibleScopeDecls: List[Decl]):
+        extraVisibleScopeDecls = [*visibleScopeDecls]
         # check Redeclared between decls in Block
-        blockDeclNames = []
+        blockScopeDeclNames = []
         blockDecls = ast.decl
         for decl in blockDecls:
             declName = self.getASTName(decl)
-            if declName in blockDeclNames:
-                if isinstance(decl, ConstDecl):
-                    raise Redeclared(Constant(), declName)
-                else:
-                    raise Redeclared(Variable(), declName)
-            blockDeclNames.append(declName)
-            decls.append(decl)
+            if declName in blockScopeDeclNames:
+                errorKind = Constant() if isinstance(decl, ConstDecl) else Variable()
+                raise Redeclared(errorKind, declName)
+            decl.accept(self, extraVisibleScopeDecls)
+            blockScopeDeclNames.append(declName)
+            extraVisibleScopeDecls.insert(0, decl)
 
-        # check statements
+        # check Error in statements
         blockStmts = ast.stmt
         for stmt in blockStmts:
-            stmt.accept(self, decls)
+            stmt.accept(self, extraVisibleScopeDecls)
 
-        return ast
-
-    def visitConstDecl(self, ast: ConstDecl, decls: List):
-        constant = ast.constant.name
+    def visitConstDecl(self, ast: ConstDecl, visibleScopeDecls: List[Decl]):
         constType = ast.constType
-        value = ast.value.accept(self, decls)
+        value = ast.value.accept(self, visibleScopeDecls)
 
-        if len(decls) > 0 and isinstance(decls[0], StoreDecl):
-            if self.checkStoreExist(constant, decls):
-                raise Redeclared(Constant(), constant)
         if not self.checkTypeMatch(constType, value):
             raise TypeMismatchInConstant(ast)
 
         return ast
 
-    def visitClassDecl(self, ast: ClassDecl, classDecls: List[ClassDecl]):
-        classname = ast.classname.name
-        parentname = ast.parentname.name if ast.parentname else None
+    def visitClassDecl(self, ast: ClassDecl, globalScopeDecls: List[Decl]):
+        # store all class'name of ClassDecl in globalScopeDecls
+        classDeclNames = []
+        for decl in globalScopeDecls:
+            classDeclNames.append(self.getASTName(decl))
 
-        classDecl = ClassDecl(Id(classname), [])
-
-        if self.checkClassExist(classname, classDecls):
+        # check Redeclared new class
+        classname = self.getASTName(ast)
+        if classname in classDeclNames:
             raise Redeclared(Class(), classname)
-        if parentname != None:
-            if not self.checkClassExist(parentname, classDecls):
-                raise Undeclared(Class(), parentname)
-            else:
-                classDecl.parentname = Id(parentname)
 
-        for mem in ast.memlist:
-            checkedMember = mem.accept(self, classDecl.memlist)
-            classDecl.memlist.append(checkedMember)
+        # check Undeclared parent Class
+        parentname = self.getASTName(ast.parentname)
+        if parentname != "":
+            if not parentname in classDeclNames:
+                raise Undeclared(Class(), parentname)
+
+        # init classScopeDecls
+        classScopeDecls = []
+        self.classScopeMembers = []
+
+        # check Error in class's members
+        classMembers = ast.memlist
+        for mem in classMembers:
+            checkedMember = mem.accept(self, classScopeDecls)
+            self.classScopeMembers.append(checkedMember)
+            classScopeDecls.append(checkedMember)
 
         print("ok in visitClassDecl")
-        return classDecl
-
-    def visitMethodDecl(self, ast: MethodDecl, memlist: List[MemDecl]):
-        if self.checkMemberExist(ast, memlist):
-            raise Redeclared(Method(), self.getASTName(ast))
-
-        paramNames = []
-        decls = []
-        for p in ast.param:
-            pName = self.getASTName(p)
-            if pName in paramNames:
-                raise Redeclared(Parameter(), pName)
-            paramNames.append(pName)
-            decls.append(p)
-
-        blockDecls = ast.body.decl
-        for decl in blockDecls:
-            declName = self.getASTName(decl)
-            if declName in paramNames:
-                if isinstance(decl, VarDecl):
-                    raise Redeclared(Variable(), declName)
-                else:
-                    raise Redeclared(Constant(), declName)
-
-        ast.body.accept(self, decls)
         return ast
 
-    def visitAttributeDecl(self, ast: AttributeDecl, memlist: List[MemDecl]):
-        if self.checkMemberExist(ast, memlist):
-            raise Redeclared(Attribute(), self.getASTName(ast))
+    def visitMethodDecl(self, ast: MethodDecl, classScopeDecls: List[Decl]):
+        # store all member's name of MemDecl in classScopeDecls
+        memDeclNames = []
+        for decl in classScopeDecls:
+            memDeclNames.append(self.getASTName(decl))
 
-        kind = ast.kind
-        decl: StoreDecl = ast.decl.accept(self, memlist)
-        attributeDecl = AttributeDecl(kind, decl)
-        return attributeDecl
+        # check Redeclared method in Class scope
+        methodName = self.getASTName(ast)
+        if methodName in memDeclNames:
+            raise Redeclared(Method(), methodName)
+
+        # init methodScopeDecls
+        methodScopeDecls = []
+        # check Redeclared in parameter
+        paramNames = []
+        paramDecls = ast.param
+        for decl in paramDecls:
+            paramName = self.getASTName(decl)
+            if paramName in paramNames:
+                raise Redeclared(Parameter(), paramName)
+            paramNames.append(paramName)
+            methodScopeDecls.append(decl)
+
+        # check Redeclared if any decl of body redeclared in methodScopeDecls
+        bodyDecls = ast.body.decl
+        for decl in bodyDecls:
+            declName = self.getASTName(decl)
+            if declName in paramNames:
+                errorKind = Constant() if isinstance(decl, ConstDecl) else Variable()
+                raise Redeclared(errorKind, declName)
+
+        # combine decl to pass to statements
+        combineDecls = paramDecls + classScopeDecls
+
+        # check Error in Block
+        ast.body.accept(self, combineDecls)
+        return ast
+
+    def visitAttributeDecl(self, ast: AttributeDecl, classScopeDecls: List[MemDecl]):
+        # store all member's name of MemDecl in classScopeDecls
+        memDeclNames = []
+        for decl in classScopeDecls:
+            memDeclNames.append(self.getASTName(decl))
+
+        # check Redeclared attribute in Class scope
+        attributeName = self.getASTName(ast)
+        if attributeName in memDeclNames:
+            raise Redeclared(Attribute(), attributeName)
+
+        # check Error in StoreDecl
+        ast.decl.accept(self, classScopeDecls)
+
+        print("ok in visitAttributeDecl")
+        return ast
 
     def visitProgram(self, ast: Program, c):
+        # Store io class
         ioMembers = []
         for s in c:
             ioMembers.append(
@@ -359,11 +452,15 @@ class StaticChecker(BaseVisitor, Utils):
                     Block([], []),
                 )
             )
-        self.program = Program([ClassDecl(Id("io"), ioMembers)])
-        for classDecl in ast.decl:
-            checkedClassDecl = classDecl.accept(self, self.program.decl)
-            self.program.decl.append(checkedClassDecl)
+        ioClassDecl = ClassDecl(Id("io"), ioMembers)
 
+        # init globalScopeDecls
+        self.globalScopeDecls = [ioClassDecl]
+        # check Error in every classDecl
+        classDecls = ast.decl
+        for decl in classDecls:
+            checkedClassDecl = decl.accept(self, self.globalScopeDecls)
+            self.globalScopeDecls.append(checkedClassDecl)
         print("ok in visitProgram")
 
     def check(self):

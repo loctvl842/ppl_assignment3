@@ -266,3 +266,108 @@ class CheckerSuite(unittest.TestCase):
     #     """
     #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(a),ArrayType(3,FloatType),[FloatLit(2.3),FloatLit(102e3)])"
     #     self.assertTrue(TestChecker.test(input, expect, 426))
+
+    # def test_28(self):
+    #     input = """
+    #     class C {
+    #         int a;
+    #     }
+    #     class B {
+    #         C x;
+    #         int y;
+    #         int z = x.a + y.a;
+    #     }
+    #     """
+    #     expect = "Illegal Member Access: FieldAccess(Id(y),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 427))
+
+    # def test_29(self):
+    #     input = """
+    #     class C {
+    #         int a;
+    #     }
+    #     class B {
+    #         int z = C.a;
+    #     }
+    #     """
+    #     expect = "Illegal Member Access: FieldAccess(Id(C),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 428))
+
+    # def test_30(self):
+    #     input = """
+    #     class C {
+    #         static float a;
+    #     }
+    #     class B {
+    #         final int z = C.a;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,FieldAccess(Id(C),Id(a)))"
+    #     self.assertTrue(TestChecker.test(input, expect, 429))
+
+    # def test_31(self):
+    #     input = """
+    #     class C {
+    #         static float a;
+    #     }
+    #     class B {
+    #         C x;
+    #         int y;
+    #         final int z = y.a;
+    #     }
+    #     """
+    #     expect = "Illegal Member Access: FieldAccess(Id(y),Id(a))"
+    #     self.assertTrue(TestChecker.test(input, expect, 430))
+
+    # def test_32(self):
+    #     input = """
+    #     class C {
+    #         static float a;
+    #     }
+    #     class B {
+    #         C x;
+    #         final int z = x.a;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,FieldAccess(Id(x),Id(a)))"
+    #     self.assertTrue(TestChecker.test(input, expect, 431))
+
+    # def test_33(self):
+    #     input = """
+    #     class B {
+    #         float d;
+    #         final int z = this.d;
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,FieldAccess(Self(),Id(d)))"
+    #     self.assertTrue(TestChecker.test(input, expect, 432))
+
+    # def test_34(self):
+    #     input = """
+    #     class B {
+    #         float d() {}
+    #         final int z = this.d;
+    #     }
+    #     """
+    #     expect = "Undeclared Attribute: d"
+    #     self.assertTrue(TestChecker.test(input, expect, 433))
+
+    # def test_35(self):
+    #     input = """
+    #     class B {
+    #         float d() {}
+    #         final int z = this.z();
+    #     }
+    #     """
+    #     expect = "Undeclared Method: z"
+    #     self.assertTrue(TestChecker.test(input, expect, 434))
+
+    def test_36(self):
+        input = """
+        class B {
+            float d() {}
+            final int z = this.d();
+        }
+        """
+        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Self(),Id(d),[]))"
+        self.assertTrue(TestChecker.test(input, expect, 435))
