@@ -362,12 +362,278 @@ class CheckerSuite(unittest.TestCase):
     #     expect = "Undeclared Method: z"
     #     self.assertTrue(TestChecker.test(input, expect, 434))
 
-    def test_36(self):
+    # def test_36(self):
+    #     input = """
+    #     class B {
+    #         float d() {}
+    #         final int z = this.d();
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Self(),Id(d),[]))"
+    #     self.assertTrue(TestChecker.test(input, expect, 435))
+
+    # def test_37(self):
+    #     input = """
+    #     class B {
+    #         void d() {}
+    #         final int z = this.d(a, b);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Self(),Id(d),[Id(a),Id(b)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 436))
+
+    # def test_38(self):
+    #     input = """
+    #     class B {
+    #         float d(int x; int y) {}
+    #         int x;
+    #         final int z = this.d(x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Self(),Id(d),[Id(x)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 437))
+
+    # def test_39(self):
+    #     input = """
+    #     class B {
+    #         float d(int x; int y) {}
+    #         int x;
+    #         final int z = this.d(x, x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Self(),Id(d),[Id(x),Id(x)]))"
+    #     self.assertTrue(TestChecker.test(input, expect, 438))
+
+    # def test_40(self):
+    #     input = """
+    #     class B {
+    #         float d(int x; int y) {}
+    #         float x;
+    #         final int z = this.d(x, x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Self(),Id(d),[Id(x),Id(x)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 439))
+
+    # def test_41(self):
+    #     input = """
+    #     class A {
+    #         float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         A x;
+    #         final int z = x.d();
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Id(x),Id(d),[])"
+    #     self.assertTrue(TestChecker.test(input, expect, 440))
+
+    # def test_42(self):
+    #     input = """
+    #     class A {
+    #         float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         A x;
+    #         final int z = A.d();
+    #     }
+    #     """
+    #     expect = "Illegal Member Access: CallExpr(Id(A),Id(d),[])"
+    #     self.assertTrue(TestChecker.test(input, expect, 441))
+
+    # def test_43(self):
+    #     input = """
+    #     class A {
+    #         static float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         A x;
+    #         final int z = A.d();
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Id(A),Id(d),[])"
+    #     self.assertTrue(TestChecker.test(input, expect, 442))
+
+    # def test_44(self):
+    #     input = """
+    #     class A {
+    #         static float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         int x;
+    #         final int z = A.d(x, x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Id(A),Id(d),[Id(x),Id(x)]))"
+    #     self.assertTrue(TestChecker.test(input, expect, 443))
+
+    # def test_45(self):
+    #     input = """
+    #     class A {
+    #         static float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         int x;
+    #         final int z = A.d(x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Id(A),Id(d),[Id(x)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 444))
+
+    # def test_46(self):
+    #     input = """
+    #     class A {
+    #         static float d(int x; int y) {}
+    #     }
+    #     class B {
+    #         float x;
+    #         final int z = A.d(x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Expression: CallExpr(Id(A),Id(d),[Id(x)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 445))
+
+    # def test_47(self):
+    #     input = """
+    #     class A {
+    #         static float d(float x) {}
+    #     }
+    #     class B {
+    #         float x;
+    #         final int z = A.d(x);
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Id(A),Id(d),[Id(x)]))"
+    #     self.assertTrue(TestChecker.test(input, expect, 446))
+
+    # def test_48(self):
+    #     input = """
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             A.sum();
+    #         }
+    #     }
+    #     """
+    #     expect = "Undeclared Identifier: A"
+    #     self.assertTrue(TestChecker.test(input, expect, 447))
+
+    # def test_49(self):
+    #     input = """
+    #     class A {
+    #         static int sum(int a; int b) {}
+    #     }
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             A.sum();
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: Call(Id(A),Id(sum),[])"
+    #     self.assertTrue(TestChecker.test(input, expect, 448))
+
+    # def test_50(self):
+    #     input = """
+    #     class A {
+    #         static int sum(int a; int b) {}
+    #     }
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             this.sum();
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: Call(Self(),Id(sum),[])"
+    #     self.assertTrue(TestChecker.test(input, expect, 449))
+
+    # def test_51(self):
+    #     input = """
+    #     class A {
+    #         static int sum(int a; int b) {}
+    #     }
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             this.sum(2, 2.3);
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: Call(Self(),Id(sum),[IntLit(2),FloatLit(2.3)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 450))
+
+    # def test_52(self):
+    #     input = """
+    #     class A {
+    #         static int sum(int a; int b) {}
+    #     }
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             return 2.3;
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: Return(FloatLit(2.3))"
+    #     self.assertTrue(TestChecker.test(input, expect, 451))
+
+    # def test_53(self):
+    #     input = """
+    #     class A {
+    #         static int sum(int a; int b) {}
+    #     }
+    #     class B {
+    #         int sum(int a; int b) {}
+    #         int foo() {
+    #             float i;
+    #             for i := 1 to 100 do {
+    #                 io.writeIntLn(i);
+    #                 Intarray[i] := i + 1;
+    #             }
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: For(Id(i),IntLit(1),IntLit(100),True,Block([],[Call(Id(io),Id(writeIntLn),[Id(i)]),AssignStmt(ArrayCell(Id(Intarray),Id(i)),BinaryOp(+,Id(i),IntLit(1)))])])"
+    #     self.assertTrue(TestChecker.test(input, expect, 452))
+
+    # def test_54(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             io.writntLn(i);
+    #         }
+    #     }
+    #     """
+    #     expect = "Undeclared Method: writntLn"
+    #     self.assertTrue(TestChecker.test(input, expect, 453))
+
+    # def test_55(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             int i;
+    #             for i := 1 to 100 do {
+    #                 io.writeFloatLn(i);
+    #             }
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: Call(Id(io),Id(writeFloatLn),[Id(i)])"
+    #     self.assertTrue(TestChecker.test(input, expect, 454))
+
+    def test_56(self):
         input = """
         class B {
-            float d() {}
-            final int z = this.d();
+            int foo() {
+                int i;
+                for i := 1 to 100 do {
+                    int a = 2;
+                    int b = 2;
+                }
+                int c = a + b;
+            }
         }
         """
-        expect = "Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Self(),Id(d),[]))"
-        self.assertTrue(TestChecker.test(input, expect, 435))
+        expect = "Undeclared Identifier: a"
+        self.assertTrue(TestChecker.test(input, expect, 455))

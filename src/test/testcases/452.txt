@@ -1,0 +1,15 @@
+
+        class A {
+            static int sum(int a; int b) {}
+        }
+        class B {
+            int sum(int a; int b) {}
+            int foo() {
+                int i;
+                for i := 1 to 100 do {
+                    io.writntLn(i);
+                    Intarray[i] := i + 1;
+                }
+            }
+        }
+        

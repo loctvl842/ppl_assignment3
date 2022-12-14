@@ -1,0 +1,9 @@
+
+        class A {
+            static float d(int x; int y) {}
+        }
+        class B {
+            int x;
+            final int z = A.d(x, x);
+        }
+        

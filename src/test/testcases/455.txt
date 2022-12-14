@@ -1,0 +1,12 @@
+
+        class B {
+            int foo() {
+                int i;
+                for i := 1 to 100 do {
+                    int a = 2;
+                    int b = 2;
+                }
+                int c = a + b;
+            }
+        }
+        

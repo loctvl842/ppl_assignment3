@@ -1,0 +1,10 @@
+
+        class B {
+            int foo() {
+                int i;
+                for i := 1 to 100 do {
+                    io.writeFloatLn(i);
+                }
+            }
+        }
+        

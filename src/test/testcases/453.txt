@@ -1,0 +1,7 @@
+
+        class B {
+            int foo() {
+                io.writntLn(i);
+            }
+        }
+        

@@ -1,0 +1,11 @@
+
+        class A {
+            static int sum(int a; int b) {}
+        }
+        class B {
+            int sum(int a; int b) {}
+            int foo() {
+                this.sum();
+            }
+        }
+        

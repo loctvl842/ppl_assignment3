@@ -1,0 +1,7 @@
+
+        class B {
+            float d(int x; int y) {}
+            float x;
+            final int z = this.d(x, x);
+        }
+        

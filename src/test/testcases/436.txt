@@ -1,0 +1,6 @@
+
+        class B {
+            void d() {}
+            final int z = this.d(a, b);
+        }
+        
