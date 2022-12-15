@@ -710,7 +710,7 @@ class CheckerSuite(unittest.TestCase):
     def test_61(self):
         input = """
         class B {
-            final int[3] x = {1, 2, 3};
+            int[3] x = {1, 2, 3};
             int foo() {
                 this.x[1] := 5;
             }
