@@ -1,8 +1,8 @@
 
         class B {
-            int[3] x = {1, 2, 3};
+            final int[3] x = {1, 2, 3};
             int foo() {
-                string i = x[1];
+                this.x[1] := 5;
             }
         }
         

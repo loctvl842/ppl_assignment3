@@ -61,7 +61,7 @@ class StaticChecker(BaseVisitor, Utils):
         elif isinstance(targetObj, ClassDecl):
             return targetObj.classname.name
         elif isinstance(targetObj, FieldAccess):
-            return self.getASTName(targetObj.obj)
+            return self.getASTName(targetObj.fieldname)
         elif isinstance(targetObj, ArrayCell):
             return self.getASTName(targetObj.arr)
         elif isinstance(targetObj, CallExpr):
@@ -73,16 +73,16 @@ class StaticChecker(BaseVisitor, Utils):
         else:
             return ""
 
-    ### `getMemDeclType` function used to get Type of AST member of class
-    def getMemDeclType(self, memDecl: MemDecl) -> Type:
+    ### `getMemDeclType` function used to get Type of AST member of class(may be AttributeDecl, MethodDecl, VarDecl, ConstDecl)
+    def getDeclType(self, memDecl: MemDecl) -> Type:
         if isinstance(memDecl, MethodDecl):
             return memDecl.returnType
-        else:
-            storeDecl = memDecl.decl
-            if isinstance(storeDecl, VarDecl):
-                return storeDecl.varType
-            else:
-                return storeDecl.constType
+        elif isinstance(memDecl, AttributeDecl):
+            return self.getDeclType(memDecl.decl)
+        elif isinstance(memDecl, VarDecl):
+            return memDecl.varType
+        elif isinstance(memDecl, ConstDecl):
+            return memDecl.constType
 
     ### `searchClass` function used to find existed class
     def searchClassByName(self, name: str) -> ClassDecl:
@@ -156,8 +156,8 @@ class StaticChecker(BaseVisitor, Utils):
         if isinstance(decl, AttributeDecl):
             return self.checkIsConstant(decl.decl)
 
-    def visitAccess(self, ast, visibleScopeDecls: List[Decl], memDeclType):
-        objName = self.getASTName(ast)
+    def visitAccess(self, ast, visibleScopeDecls: List[Decl], memDeclType) -> StoreDecl:
+        objName = self.getASTName(ast.obj)
         classDecl = self.searchClassByName(objName)
         fieldname = self.getASTName(ast.fieldname if memDeclType == AttributeDecl else ast.method)
         searchedMember = None
@@ -281,17 +281,23 @@ class StaticChecker(BaseVisitor, Utils):
             if not self.checkTypeMatch(paramDecls[i], paramPassed[i]):
                 raise TypeMismatchInExpression(ast)
 
-        return self.getMemDeclType(searchedMethodMember)
+        return self.getDeclType(searchedMethodMember)
 
     def visitNewExpr(self, ast: NewExpr, visibleScopeDecls: List[Decl]):
         pass
 
     def visitArrayCell(self, ast: ArrayCell, visibleScopeDecls: List[Decl]):
-        pass
+        arr = ast.arr.accept(self, visibleScopeDecls)
+        idx = ast.idx.accept(self, visibleScopeDecls)
+        if not isinstance(arr, ArrayType):
+            raise TypeMismatchInExpression(ast)
+        if not isinstance(idx, IntType):
+            raise TypeMismatchInExpression(ast)
+        return arr.eleType
 
     def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]) -> Type:
         searchedAttributeMember = self.visitAccess(ast, visibleScopeDecls, AttributeDecl)
-        return self.getMemDeclType(searchedAttributeMember)
+        return self.getDeclType(searchedAttributeMember)
 
     def visitIntLiteral(
         self, ast: IntLiteral, visibleScopeDecls: List[Decl]
@@ -336,13 +342,15 @@ class StaticChecker(BaseVisitor, Utils):
                 raise CannotAssignToConstant(ast)
         elif isinstance(ast.lhs, FieldAccess):
             searchedMember = self.visitAccess(ast.lhs)
-            if isinstance(searchedMember.decl, ConstDecl):
+            if self.checkIsConstant(searchedMember):
                 raise CannotAssignToConstant(ast)
         elif isinstance(ast.lhs, ArrayCell):
-            pass
+            arrName = self.getASTName(ast.lhs)
+            memDecl = self.searchDeclByName(arrName,visibleScopeDecls)
+            if self.checkIsConstant(memDecl):
+                raise CannotAssignToConstant(ast)
         else:
-            # handle error (unknown)
-            pass
+            raise Undeclared(Identifier(), lhsName)
 
         if not self.checkTypeMatch(lhsType, expType):
             raise TypeMismatchInStatement(ast)
