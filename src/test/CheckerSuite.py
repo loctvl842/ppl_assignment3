@@ -379,7 +379,7 @@ class CheckerSuite(unittest.TestCase):
     #         final int z = this.d(a, b);
     #     }
     #     """
-    #     expect = "Type Mismatch In Expression: CallExpr(Self(),Id(d),[Id(a),Id(b)])"
+    #     expect = "Undeclared Identifier: a"
     #     self.assertTrue(TestChecker.test(input, expect, 436))
 
     # def test_38(self):
@@ -614,26 +614,98 @@ class CheckerSuite(unittest.TestCase):
     #         int foo() {
     #             int i;
     #             for i := 1 to 100 do {
-    #                 io.writeFloatLn(i);
+    #                 io.writeStrLn(i);
     #             }
     #         }
     #     }
     #     """
-    #     expect = "Type Mismatch In Statement: Call(Id(io),Id(writeFloatLn),[Id(i)])"
+    #     expect = "Type Mismatch In Statement: Call(Id(io),Id(writeStrLn),[Id(i)])"
     #     self.assertTrue(TestChecker.test(input, expect, 454))
 
-    def test_56(self):
+    # def test_56(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             int i;
+    #             for i := 1 to 100 do {
+    #                 int a = 2;
+    #                 int b = 2;
+    #             }
+    #             int c = a + b;
+    #         }
+    #     }
+    #     """
+    #     expect = "Undeclared Identifier: a"
+    #     self.assertTrue(TestChecker.test(input, expect, 455))
+
+    # def test_57(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             int i;
+    #             for i := 1 to 100 do {
+    #                 int a = 2;
+    #                 int b = 2;
+    #             }
+    #             c := a + b;
+    #         }
+    #     }
+    #     """
+    #     expect = "Undeclared Identifier: c"
+    #     self.assertTrue(TestChecker.test(input, expect, 456))
+
+    # def test_58(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             int c = 2;
+    #             c := 2.3;
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: AssignStmt(Id(c),FloatLit(2.3))"
+    #     self.assertTrue(TestChecker.test(input, expect, 457))
+
+    # def test_59(self):
+    #     input = """
+    #     class B {
+    #         int foo() {
+    #             int i;
+    #             for i := 1.2 to 100 do {
+    #                 int a = 2;
+    #             }
+    #         }
+    #     }
+    #     """
+    #     expect = "Type Mismatch In Statement: AssignStmt(Id(i),FloatLit(1.2))"
+    #     self.assertTrue(TestChecker.test(input, expect, 458))
+
+    # def test_59(self):
+    #     input = """
+    #     class B {
+    #         final int x = 5;
+    #         int foo() {
+    #             int i;
+    #             for i := 1 to 100 do {
+    #                 x := 2;
+    #             }
+    #         }
+    #     }
+    #     """
+    #     expect = "Cannot Assign To Constant: AssignStmt(Id(x),IntLit(2))"
+    #     self.assertTrue(TestChecker.test(input, expect, 458))
+
+    def test_60(self):
         input = """
         class B {
+            final int x = 5;
             int foo() {
                 int i;
                 for i := 1 to 100 do {
-                    int a = 2;
-                    int b = 2;
+                    x := 2;
                 }
-                int c = a + b;
             }
         }
         """
-        expect = "Undeclared Identifier: a"
-        self.assertTrue(TestChecker.test(input, expect, 455))
+        expect = "Cannot Assign To Constant: AssignStmt(Id(x),IntLit(2))"
+        self.assertTrue(TestChecker.test(input, expect, 459))

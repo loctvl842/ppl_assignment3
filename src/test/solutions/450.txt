@@ -1,1 +1,1 @@
-Type Mismatch In Statement: Return(FloatLit(2.3))
+Type Mismatch In Statement: Call(Self(),Id(sum),[IntLit(2),FloatLit(2.3)])

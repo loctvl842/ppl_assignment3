@@ -5,9 +5,9 @@
         class B {
             int sum(int a; int b) {}
             int foo() {
-                int i;
+                float i;
                 for i := 1 to 100 do {
-                    io.writntLn(i);
+                    io.writeIntLn(i);
                     Intarray[i] := i + 1;
                 }
             }

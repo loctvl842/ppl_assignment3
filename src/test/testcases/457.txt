@@ -1,0 +1,8 @@
+
+        class B {
+            int foo() {
+                int c = 2;
+                c := 2.3;
+            }
+        }
+        

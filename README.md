@@ -8,142 +8,176 @@
 # SUPPORT METHODS
 
 ## getASTName()
-
 ```python
     ### `getASTName` function used to get name of AST object
-    ## @param targetObj can be type of MemDecl(AttributeDecl, MethodDecl) or StoreDecl(ConstDecl, VarDecl)
-    ## @return name type str
-    def getASTName(self, targetObj):
+    ## @param targetObj can be type of AttributeDecl, MethodDecl, VarDecl, ConstDecl, ClassDecl, FieldAccess, ArrayCell, CallExpr, ClassType
+    def getASTName(self, targetObj) -> str:
 ```
 
-## checkClassExist()
-
+## searchClassByName()
 ```python
-    ### `checkClassExist` function used to check if class exist or not
-    ## @param classname name of the class to check (type: str)
-    ## @param classDecls list of class existed
-    ## @return True/False
-    def checkClassExist(self, classname: str, classDecls: List[ClassDecl]):
+    ### `searchClass` function used to find existed class
+    def searchClassByName(self, name: str) -> ClassDecl:
 ```
 
-## checkMemberExist()
-
+## getMemDeclType()
 ```python
-    ### `checkMemberExist` function used to check if member (can be attribute or method) exist within a class
-    ## @param targetMem name of member need to check (type: MemDecl)
-    ## @param memlist list of members need to check (type: List[MemDecl])
-    ## @return True/False
-    def checkMemberExist(self, targetMem: MemDecl, memlist: List[MemDecl]):
+    ### `getMemDeclType` function used to get Type of AST member of class
+    def getMemDeclType(self, memDecl: MemDecl) -> Type:
+```
+
+## searchMemberOfClassByName()
+```python
+    ### `searchMemberOfClassByName` search a member of other class in global scope
+    def searchMemberOfClassByName(self, classDecl: ClassDecl, targetMemberName: str) -> MemDecl:
+```
+
+## searchMemberByName()
+```python
+    ### `searchMemberByName` search a member of current checking class
+    def searchMemberByName(self, targetMemberName: str) -> MemDecl:
+```
+
+## searchDeclByName()
+```python
+    ### `searchVarDecl` function used to search a Decl through name
+    def searchDeclByName(self, targetname: str, visibleScopeDecls: List[Decl]) -> StoreDecl:
 ```
 
 ## checkIsKidOf()
-
 ```python
     ### `checkIsKidOf` function used to check if an object is a child of another by query bottom down
-    ## @param targetChildName is the child's name need to check (type: str)
-    ## @param targetParentName is the parent's name need to check (type: str)
-    ## @return True/False
-    def checkIsKidOf(self, targetChildName: str, targetParentName: str):
+    def checkIsKidOf(self, targetChildName: str, targetParentName: str) -> bool:
 ```
 
-## checkStoreExist()
-
+## checkTypeMatch()
 ```python
-    ### `checkStoreExist` function used to check if variable is declared within a block scope
-    ## @param variable is the name to check
-    ## @param varDecls is list of decl type StoreDecl that may contain variable
-    ## @return True/False
-    def checkStoreExist(self, variable: str, decls: List[StoreDecl]):
-```
-
-## searchClass()
-
-```python
-    ### `searchClass` function used to find existed class
-    ## @param classname type str
-    ## @param ClassDecl (None if not found)
-    def searchClass(self, classname: str):
-```
-
-## searchVarDecl()
-
-```python
-    ### `searchVarDecl` function used to search a varDecl through name
-    ## @param targetname name to search
-    ## @param varDecls is list of varDecl that may contain varDecl with targetname
-    ## @return VarDecl
-    def searchVarDecl(self, variable: targetname, varDecls: List[VarDecl]):
+    ### `checkTypeMatch` function used to check if rhs has the same type to lhs or can be con be coerce to lhs
+    def checkTypeMatch(self, lhsType: Type, rhsType: Type) -> bool:
 ```
 
 # CHECK ASSIGNMENT
 
-## visitId
-
-> `additional param` varDecls: List[VarDecl] (can be list of `StoreDecl`[VarDecl, ConstDecl] or list of `MemDecl`[AttributeDecl,MethodDecl])
-
-> `return` Type() can be `IntType()`, `StringType()`, `FloatType()`, `BoolType()`, `VoidType()`
+```python
+    def visitId(self, ast: Id, visibleScopeDecls: List[Decl]) -> Type:
+```
 
 - check error `Undeclared(Identifier(), ast.name)` (this function only check this type of error because the `id` checked here is the `id` used in `expr`; `id` like `classname` or `methodname` have to be checked in its own function for example: `visitClassDecl`, `visitMethodDecl`, ... )
 
 ## visitBinaryOp
+```python
+    def visitBinaryOp(self, ast: BinaryOp, visibleScopeDecls: List[Decl]) -> Type:
+```
+- check error `TypeMisMatch(ast)`
 
-> `additional param` varDecls: List[VarDecl]
+## visitUnaryOp
+```python
+    def visitUnaryOp(self, ast: UnaryOp, visibleScopeDecls: List[Decl]) -> Type:
+```
 
-> `return` Type() can be `IntType()`, `StringType()`, `FloatType()`, `BoolType()`
+## visitCallExpr
+```python
+    def visitCallExpr(self, ast: CallExpr, visibleScopeDecls: List[Decl]) -> Type:
+```
+- check error `Undeclared(Method(), methodName)`, `TypeMismatchInExpression(ast)`, `IllegalMemberAccess(ast)`
+
+## visitNewExpr
+
+## visitArrayCell
+
+## visitFieldAccess
+```python
+    def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]) -> Type:
+```
+- check error `Undeclared(Attribute(), fieldname)`, `IllegalMemberAccess(ast)`
+
+## visitIntLiteral()
+```python
+    def visitIntLiteral(self, ast: IntLiteral, visibleScopeDecls: List[Decl]) -> IntType:
+```
+
+## visitFloatLiteral()
+```python
+    def visitFloatLiteral(self, ast: FloatLiteral, visibleScopeDecls: List[Decl]):
+```
+
+## visitStringLiteral()
+```python
+    def visitStringLiteral(self, ast: StringLiteral, visibleScopeDecls: List[Decl]) -> StringType:
+```
+
+## visitBoolLiteral()
+```python
+    def visitBooleanLiteral(self, ast: BooleanLiteral, visibleScopeDecls: List[Decl]) -> BoolType:
+```
 
 ## visitArrayLiteral
-
-> `return` ArrayType()
-
-- check error `IllegalArrayLiteral(arr)`: check if element have the same type
+```python
+    def visitArrayLiteral(self, ast: ArrayLiteral, temp) -> ArrayType:
+```
+- check error `IllegalArrayLiteral(ast)`
 
 ## visitAssign
+```python
+    def visitAssign(self, ast: Assign, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `TypeMismatchInStatement(assignStmt)`
+- check error `CannotAssignToConstant(assignStmt)` (check if lhs is connstant)
 
-> `additional param` decls: list of all `StoreDecl` (may include some `parameter` in `MethodDecl()` and from parent scope)
+## visitReturn()
+```python
+    def visitReturn(self, ast :Return, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `TypeMismatchInStatement(ast)`
 
-- check error `Undeclared(Identifier(), name)` if the assigned id is not declared
+## visitCallStmt()
+```python
+    def visitCallStmt(self, ast: CallStmt, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `Undeclared(Method(), methodName)`, `TypeMismatchInStatement(ast)`, `IllegalMemberAccess(ast)`
 
 ## visitVarDecl
-
-> `additional param` varDecls: List (can be list of `StoreDecl` or list of `MemDecl`)
-
-- check error `Redeclared(Variable(), variable)` if `varDecls` is the list of `StoreDecl`
-- check error `TypeMismatchInStatement(Assign(lhs,exp))` **dunno what the exactly error type (just sure that TypeMismatch)**
-- if `lhs` and `rhs` are the same `Type`. We have to check if they are `ClassType` so check if `rhs` is kid of `lhs`; or if they are `ArrayType` so check if element of `rhs` and `lhs` have the same type or not
+```python
+    def visitVarDecl(self, ast: VarDecl, visibleScopeDecls: list[StoreDecl]) -> Type:
+```
+- check error `TypeMismatchInStatement(Assign(ast.variable, ast.varInit))`
 
 ## visitBlock
-
-> `additional param` decls: list of all `StoreDecl` (may include some `parameter` in `MethodDecl()` and from parent scope)
-
-- check error `Redeclared()` in list of `StoreDecl` (just check between `decls` of `Block`)
-- check error `Undeclared()` in list of `Stmt` (based on list of decls of Block combine with decls of `additional param`)
+```python
+    def visitBlock(self, ast: Block, visibleScopeDecls: List[Decl]) -> None:
+```
+- check error `Redeclared(errorKind, declName)` (only check between declares in block)
 
 ## visitConstDecl
-
-> `additional param` varDecls: List (can be list of `StoreDecl` or list of `MemDecl`)
-
-- check error `Redeclared(Constant(), constant)` if `varDecls` is the list of `StoreDecl`
-- check error `TypeMismatchInConstant(ast)` the same to TypeMismatch in visitVarDecl
+```python
+    def visitConstDecl(self, ast: ConstDecl, visibleScopeDecls: List[Decl]) -> Type:
+```
+- check error `TypeMismatchInConstant(ast)`
 
 ## visitClassDecl
-
+```python
+    def visitClassDecl(self, ast: ClassDecl, globalScopeDecls: List[Decl]) -> ClassDecl:
+```
 - check error `Redeclared(Class(), classname)` the new class
 - check error `Undeclared(Class(), parentname)` the parent of new class
 
 ## visitMethodDecl
-
-> `additional param` memList: List[MemDecl]
-
+```python
+    def visitMethodDecl(self, ast: MethodDecl, classScopeDecls: List[Decl]) -> MethodDecl:
+```
 - check error `Redeclared(Method(), methodName)` of the new method
 - check error `Redeclared(Parameter(),paramName)` in list of params
 - check error `Redeclared(StoreDecl, name)` in list of decls of `Block` (only if `StoreDecl` exist in list of `parameters`)
 
 ## visitAttributeDecl
-
-> `additional param` memList: List[MemDecl]
-
-- check error `Redeclared(Attribute(), attributeName)` of the new attribute
+```python
+    def visitAttributeDecl(self, ast: AttributeDecl, classScopeDecls: List[MemDecl]) -> AttributeDecl:
+```
+- check error `Redeclared(Attribute(), attributeName)`
 
 ## visitProgram
-
+```python
+    def visitProgram(self, ast: Program, c) -> None:
+```
 - add one existed class `io` to the completely new program
+- create `globalScopeDecls`

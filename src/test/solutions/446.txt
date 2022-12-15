@@ -1,1 +1,1 @@
-Undeclared Identifier: A
+Type Mismatch In Constant Declaration: ConstDecl(Id(z),IntType,CallExpr(Id(A),Id(d),[Id(x)]))

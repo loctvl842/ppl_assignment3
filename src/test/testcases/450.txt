@@ -5,7 +5,7 @@
         class B {
             int sum(int a; int b) {}
             int foo() {
-                return 2.3;
+                this.sum(2, 2.3);
             }
         }
         

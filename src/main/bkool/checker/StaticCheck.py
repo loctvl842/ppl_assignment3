@@ -135,7 +135,10 @@ class StaticChecker(BaseVisitor, Utils):
     ### `checkTypeMatch` function used to check if rhs has the same type to lhs or can be con be coerce to lhs
     def checkTypeMatch(self, lhsType: Type, rhsType: Type) -> bool:
         if type(lhsType) != type(rhsType):
-            return False
+            if isinstance(lhsType, FloatType) and isinstance(rhsType, IntType):
+                return True
+            else:
+                return False
         else:
             if isinstance(lhsType, ClassType) and isinstance(rhsType, ClassType):
                 lhsTypeClassName = lhsType.classname.name
@@ -146,6 +149,47 @@ class StaticChecker(BaseVisitor, Utils):
                     return False
                 return self.checkTypeMatch(lhsType.eleType, rhsType.eleType)
             return True
+
+    def checkIsConstant(self, decl: Decl) -> bool:
+        if isinstance(decl, ConstDecl):
+            return True
+        if isinstance(decl, AttributeDecl):
+            return self.checkIsConstant(decl.decl)
+
+    def visitAccess(self, ast, visibleScopeDecls: List[Decl], memDeclType):
+        objName = self.getASTName(ast)
+        classDecl = self.searchClassByName(objName)
+        fieldname = self.getASTName(ast.fieldname if memDeclType == AttributeDecl else ast.method)
+        searchedMember = None
+        if isinstance(ast.obj, SelfLiteral):
+            searchedMember = self.searchMemberByName(fieldname)
+            if searchedMember == None or type(searchedMember) != memDeclType:
+                errorKind = Attribute() if memDeclType == AttributeDecl else Method()
+                raise Undeclared(errorKind, fieldname)
+        elif classDecl == None:  # case obj is a variable type class
+            objType = ast.obj.accept(self, visibleScopeDecls)
+            if not isinstance(objType, ClassType):
+                raise IllegalMemberAccess(ast)
+            classDeclName = self.getASTName(objType)
+            classDecl = self.searchClassByName(classDeclName)
+            searchedMember = self.searchMemberOfClassByName(
+                classDecl, fieldname
+            )
+            if searchedMember == None or not isinstance(
+                searchedMember, memDeclType
+            ):
+                errorKind = Attribute() if isinstance(memDeclType, AttributeDecl) else Method()
+                raise Undeclared(errorKind, fieldname)
+        else:  # case obj is a class try to access static member
+            searchedMember = self.searchMemberOfClassByName(classDecl, fieldname)
+            if searchedMember == None or not isinstance(
+                searchedMember, memDeclType
+            ):
+                errorKind = Attribute() if isinstance(memDeclType, AttributeDecl) else Method()
+                raise Undeclared(errorKind, fieldname)
+            if not isinstance(searchedMember.kind, Static):
+                raise IllegalMemberAccess(ast)
+        return searchedMember
 
     def visitId(self, ast: Id, visibleScopeDecls: List[Decl]) -> Type:
         searchedDecl = self.searchDeclByName(ast.name, visibleScopeDecls)
@@ -224,34 +268,7 @@ class StaticChecker(BaseVisitor, Utils):
         return ast.body.accept(self, visibleScopeDecls)
 
     def visitCallExpr(self, ast: CallExpr, visibleScopeDecls: List[Decl]) -> Type:
-        objName = self.getASTName(ast)
-        classDecl = self.searchClassByName(objName)
-        methodName = self.getASTName(ast.method)
-        searchedMethodMember = None
-        if isinstance(ast.obj, SelfLiteral):
-            searchedMethodMember = self.searchMemberByName(methodName)
-            if searchedMethodMember == None or not isinstance(
-                searchedMethodMember, MethodDecl
-            ):
-                raise Undeclared(Method(), methodName)
-            if isinstance(searchedMethodMember.returnType, VoidType):
-                raise TypeMismatchInExpression(ast)
-        elif classDecl == None:  # case obj is a variable type class
-            objType = ast.obj.accept(self, visibleScopeDecls)
-            if not isinstance(objType, ClassType):
-                raise IllegalMemberAccess(ast)
-            classDeclName = self.getASTName(objType)
-            classDecl = self.searchClassByName(classDeclName)
-            searchedMethodMember = self.searchMemberOfClassByName(classDecl, methodName)
-        else:  # case obj is a class try to access static member
-            searchedMethodMember = self.searchMemberOfClassByName(classDecl, methodName)
-            if searchedMethodMember == None or not isinstance(
-                searchedMethodMember, MethodDecl
-            ):
-                raise Undeclared(Method(), methodName)
-            if not isinstance(searchedMethodMember.kind, Static):
-                raise IllegalMemberAccess(ast)
-
+        searchedMethodMember = self.visitAccess(ast, visibleScopeDecls, MethodDecl)
         paramDecls = []
         for p in searchedMethodMember.param:
             paramDecls.append(p.accept(self, []))
@@ -262,8 +279,6 @@ class StaticChecker(BaseVisitor, Utils):
             raise TypeMismatchInExpression(ast)
         for i in range(0, len(paramDecls)):
             if not self.checkTypeMatch(paramDecls[i], paramPassed[i]):
-                # print(type(paramDecls[i]))
-                # print(type(paramPassed[i]))
                 raise TypeMismatchInExpression(ast)
 
         return self.getMemDeclType(searchedMethodMember)
@@ -275,35 +290,7 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]) -> Type:
-        objName = self.getASTName(ast)
-        classDecl = self.searchClassByName(objName)
-        fieldname = self.getASTName(ast.fieldname)
-        searchedAttributeMember = None
-        if isinstance(ast.obj, SelfLiteral):
-            searchedAttributeMember = self.searchMemberByName(fieldname)
-            if searchedAttributeMember == None or not isinstance(
-                searchedAttributeMember, AttributeDecl
-            ):
-                raise Undeclared(Attribute(), fieldname)
-        elif classDecl == None:  # case obj is a variable type class
-            objType = ast.obj.accept(self, visibleScopeDecls)
-            if not isinstance(objType, ClassType):
-                raise IllegalMemberAccess(ast)
-            classDeclName = self.getASTName(objType)
-            classDecl = self.searchClassByName(classDeclName)
-            searchedAttributeMember = self.searchMemberOfClassByName(
-                classDecl, fieldname
-            )
-            if searchedAttributeMember == None:
-                raise IllegalMemberAccess(ast)
-        else:  # case obj is a class try to access static member
-            searchedAttributeMember = self.searchMemberOfClassByName(
-                classDecl, fieldname
-            )
-            if searchedAttributeMember == None:
-                raise IllegalMemberAccess(ast)
-            if not isinstance(searchedAttributeMember.kind, Static):
-                raise IllegalMemberAccess(ast)
+        searchedAttributeMember = self.visitAccess(ast, visibleScopeDecls, AttributeDecl)
         return self.getMemDeclType(searchedAttributeMember)
 
     def visitIntLiteral(
@@ -339,10 +326,25 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitAssign(self, ast: Assign, visibleScopeDecls: List[StoreDecl]) -> None:
         lhsType = ast.lhs.accept(self, visibleScopeDecls)
-        # for decl in visibleScopeDecls:
-        #     if self.getASTName(decl) == 
-        rhsType = ast.rhs.accept(self, visibleScopeDecls)
-        if self.checkTypeMatch(lhsType, rhsType):
+        expType = ast.exp.accept(self, visibleScopeDecls)
+        if isinstance(ast.lhs, Id):
+            lhsName = self.getASTName(ast.lhs)
+            decl = self.searchDeclByName(lhsName, visibleScopeDecls)
+            if decl == None:
+                raise Undeclared(Identifier(), lhsName)
+            if self.checkIsConstant(decl):
+                raise CannotAssignToConstant(ast)
+        elif isinstance(ast.lhs, FieldAccess):
+            searchedMember = self.visitAccess(ast.lhs)
+            if isinstance(searchedMember.decl, ConstDecl):
+                raise CannotAssignToConstant(ast)
+        elif isinstance(ast.lhs, ArrayCell):
+            pass
+        else:
+            # handle error (unknown)
+            pass
+
+        if not self.checkTypeMatch(lhsType, expType):
             raise TypeMismatchInStatement(ast)
 
     def visitIf(self, ast: If, visibleScopeDecls: List[StoreDecl]):
@@ -354,6 +356,8 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitFor(self, ast: For, visibleScopeDecls: List[StoreDecl]) -> None:
         idType = ast.id.accept(self, visibleScopeDecls)
+        assignPart = Assign(ast.id, ast.expr1)
+        assignPart.accept(self, visibleScopeDecls)
         if not isinstance(idType, IntType):
             raise TypeMismatchInStatement(ast)
         expr1Type = ast.expr1.accept(self, IntType)
@@ -370,34 +374,7 @@ class StaticChecker(BaseVisitor, Utils):
             raise TypeMismatchInStatement(ast)
 
     def visitCallStmt(self, ast: CallStmt, visibleScopeDecls: List[StoreDecl]) -> None:
-        objName = self.getASTName(ast)
-        classDecl = self.searchClassByName(objName)
-        methodName = self.getASTName(ast.method)
-        searchedMethodMember = None
-        if isinstance(ast.obj, SelfLiteral):
-            searchedMethodMember = self.searchMemberByName(methodName)
-            if searchedMethodMember == None or not isinstance(
-                searchedMethodMember, MethodDecl
-            ):
-                raise Undeclared(Method(), methodName)
-            if isinstance(searchedMethodMember.returnType, VoidType):
-                raise TypeMismatchInStatement(ast)
-        elif classDecl == None:  # case obj is a variable type class
-            objType = ast.obj.accept(self, visibleScopeDecls)
-            if not isinstance(objType, ClassType):
-                raise IllegalMemberAccess(ast)
-            classDeclName = self.getASTName(objType)
-            classDecl = self.searchClassByName(classDeclName)
-            searchedMethodMember = self.searchMemberOfClassByName(classDecl, methodName)
-        else:  # case obj is a class try to access static member
-            searchedMethodMember = self.searchMemberOfClassByName(classDecl, methodName)
-            if searchedMethodMember == None or not isinstance(
-                searchedMethodMember, MethodDecl
-            ):
-                raise Undeclared(Method(), methodName)
-            if not isinstance(searchedMethodMember.kind, Static):
-                raise IllegalMemberAccess(ast)
-
+        searchedMethodMember = self.visitAccess(ast, visibleScopeDecls, MethodDecl)
         paramDecls = []
         for p in searchedMethodMember.param:
             paramDecls.append(p.accept(self, []))
@@ -408,8 +385,6 @@ class StaticChecker(BaseVisitor, Utils):
             raise TypeMismatchInStatement(ast)
         for i in range(0, len(paramDecls)):
             if not self.checkTypeMatch(paramDecls[i], paramPassed[i]):
-                print(paramDecls)
-                # print(type(paramPassed[i]))
                 raise TypeMismatchInStatement(ast)
 
     def visitVarDecl(self, ast: VarDecl, visibleScopeDecls: list[StoreDecl]) -> Type:

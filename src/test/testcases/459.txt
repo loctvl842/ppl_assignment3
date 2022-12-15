@@ -1,9 +1,10 @@
 
         class B {
+            int x = 5;
             int foo() {
                 int i;
                 for i := 1 to 100 do {
-                    io.writeStrLn(i);
+                    x := 2;
                 }
             }
         }

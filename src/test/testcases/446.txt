@@ -1,8 +1,9 @@
 
+        class A {
+            static float d(float x) {}
+        }
         class B {
-            int sum(int a; int b) {}
-            int foo() {
-                A.sum();
-            }
+            float x;
+            final int z = A.d(x);
         }
         
