@@ -1,6 +1,6 @@
 
         class B {
-            final int[3] x = {1, 2, 3};
+            int[3] x = {1, 2, 3};
             int foo() {
                 this.x[1] := 5;
             }
