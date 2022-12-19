@@ -1,0 +1,6 @@
+
+        class A {
+            int[3] x;
+            final int a = x[2];
+        }
+        

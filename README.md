@@ -58,6 +58,17 @@
 
 # CHECK ASSIGNMENT
 
+## visitAccess
+```python
+    ## @param memDeclType MethodDecl | AttributeDecl
+    def visitAccess(self, ast, visibleScopeDecls: List[Decl], memDeclType) -> StoreDecl:
+```
+> this function is used by visitFieldAccess, visitCallExpr, visitCallStmt, visitAssign
+
+> this function return the member searched
+- check error `Undeclared(errorKind, fieldname)`, `IllegalMemberAccess(ast)`
+
+## visitId
 ```python
     def visitId(self, ast: Id, visibleScopeDecls: List[Decl]) -> Type:
 ```
@@ -79,41 +90,57 @@
 ```python
     def visitCallExpr(self, ast: CallExpr, visibleScopeDecls: List[Decl]) -> Type:
 ```
-- check error `Undeclared(Method(), methodName)`, `TypeMismatchInExpression(ast)`, `IllegalMemberAccess(ast)`
+- check error in visitAccess(), `TypeMismatchInExpression(ast)`
 
 ## visitNewExpr
+```python
+    def visitNewExpr(self, ast: NewExpr, visibleScopeDecls: List[Decl]) -> ExprRet:
+```
+- check error `Undeclared(Class(), name)`, `Undeclared(Method(), "<init>")`, `TypeMismatchInExpression(ast)` 
 
 ## visitArrayCell
+```python
+    def visitArrayCell(self, ast: ArrayCell, visibleScopeDecls: List[Decl]) -> ExprRet:
+```
+- check error `TypeMismatchInExpression(ast)`
 
 ## visitFieldAccess
 ```python
-    def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]) -> Type:
+    def visitFieldAccess(self, ast: FieldAccess, visibleScopeDecls: List[Decl]) -> ExprRet:
 ```
-- check error `Undeclared(Attribute(), fieldname)`, `IllegalMemberAccess(ast)`
+- check error in `visitAccess()`
 
 ## visitIntLiteral()
 ```python
-    def visitIntLiteral(self, ast: IntLiteral, visibleScopeDecls: List[Decl]) -> IntType:
+    def visitIntLiteral(
+        self, ast: IntLiteral, visibleScopeDecls: List[Decl]
+    ) -> ExprRet:
 ```
 
 ## visitFloatLiteral()
 ```python
-    def visitFloatLiteral(self, ast: FloatLiteral, visibleScopeDecls: List[Decl]):
+    def visitFloatLiteral(
+        self, ast: FloatLiteral, visibleScopeDecls: List[Decl]
+    ) -> ExprRet:
 ```
 
 ## visitStringLiteral()
 ```python
-    def visitStringLiteral(self, ast: StringLiteral, visibleScopeDecls: List[Decl]) -> StringType:
+    def visitStringLiteral(
+        self, ast: StringLiteral, visibleScopeDecls: List[Decl]
+    ) -> ExprRet:
 ```
 
 ## visitBoolLiteral()
 ```python
-    def visitBooleanLiteral(self, ast: BooleanLiteral, visibleScopeDecls: List[Decl]) -> BoolType:
+    def visitBooleanLiteral(
+        self, ast: BooleanLiteral, visibleScopeDecls: List[Decl]
+    ) -> ExprRet:
 ```
 
 ## visitArrayLiteral
 ```python
-    def visitArrayLiteral(self, ast: ArrayLiteral, temp) -> ArrayType:
+    def visitArrayLiteral(self, ast: ArrayLiteral, temp) -> ExprRet:
 ```
 - check error `IllegalArrayLiteral(ast)`
 
@@ -121,8 +148,33 @@
 ```python
     def visitAssign(self, ast: Assign, visibleScopeDecls: List[StoreDecl]) -> None:
 ```
+- check error `Undeclared(Identifier(), lhsName)`
 - check error `TypeMismatchInStatement(assignStmt)`
 - check error `CannotAssignToConstant(assignStmt)` (check if lhs is connstant)
+
+## visitIf
+```python
+    def visitIf(self, ast: If, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `TypeMismatchInStatement(ast)`
+
+## visitFor
+```python
+    def visitFor(self, ast: For, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `TypeMismatchInStatement(ast)`
+
+## visitBreak
+```python
+    def visitBreak(self, ast: Break, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `MustInLoop(ast)`
+
+## visitContinue
+```python
+    def visitContinue(self, ast: Continue, visibleScopeDecls: List[StoreDecl]) -> None:
+```
+- check error `MustInLoop(ast)`
 
 ## visitReturn()
 ```python
@@ -134,11 +186,11 @@
 ```python
     def visitCallStmt(self, ast: CallStmt, visibleScopeDecls: List[StoreDecl]) -> None:
 ```
-- check error `Undeclared(Method(), methodName)`, `TypeMismatchInStatement(ast)`, `IllegalMemberAccess(ast)`
+- check error in `visitAccess` and `TypeMismatchInStatement(ast)`
 
 ## visitVarDecl
 ```python
-    def visitVarDecl(self, ast: VarDecl, visibleScopeDecls: list[StoreDecl]) -> Type:
+    def visitVarDecl(self, ast: VarDecl, visibleScopeDecls: list[StoreDecl]) -> ExprRet:
 ```
 - check error `TypeMismatchInStatement(Assign(ast.variable, ast.varInit))`
 
@@ -150,9 +202,9 @@
 
 ## visitConstDecl
 ```python
-    def visitConstDecl(self, ast: ConstDecl, visibleScopeDecls: List[Decl]) -> Type:
+    def visitConstDecl(self, ast: ConstDecl, visibleScopeDecls: List[Decl]) -> ExprRet:
 ```
-- check error `TypeMismatchInConstant(ast)`
+- check error `TypeMismatchInConstant(ast)`, `IllegalConstantExpression(ast.value)`
 
 ## visitClassDecl
 ```python
@@ -180,4 +232,4 @@
     def visitProgram(self, ast: Program, c) -> None:
 ```
 - add one existed class `io` to the completely new program
-- create `globalScopeDecls`
+- create `globalScopeDecls` store in global

@@ -1,0 +1,8 @@
+
+        class A {
+            A(int a) {}
+            void x(int x) {
+                final int a = new A(2);
+            }
+        }
+        

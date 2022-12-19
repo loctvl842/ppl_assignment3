@@ -1,0 +1,8 @@
+
+        class B {
+            void x(int x) {
+                int[2] a;
+                a[0] := 2.3;
+            }
+        }
+        

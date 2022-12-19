@@ -1,0 +1,9 @@
+
+        class B {
+            int foo() {}
+            B() {
+                this.foo();
+                return 3;
+            }
+        }
+        

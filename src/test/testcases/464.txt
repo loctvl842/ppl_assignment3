@@ -1,0 +1,14 @@
+
+        class B {
+            void foo() {}
+            int x() {
+                int i;
+                for i := 1 to 100 do {
+                    break;
+                    continue;
+                    continue;
+                }
+                continue;
+            }
+        }
+        

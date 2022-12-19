@@ -1,0 +1,9 @@
+
+        class B {
+            void foo() {}
+            int x() {
+                this.foo();
+                continue;
+            }
+        }
+        

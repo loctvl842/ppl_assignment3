@@ -1,0 +1,18 @@
+
+        class B {
+            void foo() {}
+            int x() {
+                int i;
+                for i := 1 to 100 do {
+                    break;
+                    continue;
+                    continue;
+                    if 2+2 == 4 then {
+                        int x = 2;
+                        continue;
+                    }
+                }
+                continue;
+            }
+        }
+        
