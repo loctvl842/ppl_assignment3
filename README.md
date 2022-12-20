@@ -6,9 +6,9 @@ python run.py test CheckerSuite
 ```
 
 ## This assignment include two main parts:
-- ### [Support Class](#support-class)
-- ### [Support Methods](#support-methods)
-- ### [Static Checker](#static-checker)
+- ### [Support Class](#support-class-1)
+- ### [Support Methods](#support-methods-1)
+- ### [Static Checker](#static-checker-1)
 
 # Support class
 ```python
