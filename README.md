@@ -6,8 +6,17 @@ python run.py test CheckerSuite
 ```
 
 ## This assignment include two main parts:
-- ### [Support Methods](#support-methods-2)
-- ### [Static Checker](#static-checker-2)
+- ### [Support Class](#support-class)
+- ### [Support Methods](#support-methods)
+- ### [Static Checker](#static-checker)
+
+# Support class
+```python
+class ExprRet:
+    def __init__(self, type, isInitialized=None):
+        self.astType = type
+        self.isInitialized = isInitialized
+```
 
 # Support Methods
 
