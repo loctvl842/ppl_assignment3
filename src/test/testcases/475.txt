@@ -1,0 +1,6 @@
+
+        class Ex {
+            static int a;
+            final int x = Ex.a;
+        }
+        
