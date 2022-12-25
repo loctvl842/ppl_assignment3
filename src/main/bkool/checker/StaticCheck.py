@@ -116,9 +116,7 @@ class StaticChecker(BaseVisitor):
         return None
 
     ### `searchVarDecl` function used to search a Decl through name
-    def searchDeclByName(
-        self, targetname: str, visibleScopeDecls: List[Decl]
-    ):
+    def searchDeclByName(self, targetname: str, visibleScopeDecls: List[Decl]):
         for decl in visibleScopeDecls:
             if self.getASTName(decl) == targetname:
                 return decl
@@ -179,7 +177,7 @@ class StaticChecker(BaseVisitor):
         ## case obj is `this`
         if isinstance(ast.obj, SelfLiteral):
             searchedMember = self.searchMemberByName(fieldname)
-            if searchedMember is None or type(searchedMember) != memDeclType:
+            if searchedMember is None or not isinstance(searchedMember, memDeclType):
                 errorKind = Attribute() if memDeclType == AttributeDecl else Method()
                 raise Undeclared(errorKind, fieldname)
         ## case obj is a variable type class
@@ -191,17 +189,13 @@ class StaticChecker(BaseVisitor):
             classDecl = self.searchClassByName(classDeclName)
             searchedMember = self.searchMemberOfClassByName(classDecl, fieldname)
             if searchedMember is None or not isinstance(searchedMember, memDeclType):
-                errorKind = (
-                    Attribute() if isinstance(memDeclType, AttributeDecl) else Method()
-                )
+                errorKind = Attribute() if memDeclType == AttributeDecl else Method()
                 raise Undeclared(errorKind, fieldname)
         ## case obj is a class try to access static member
         else:
             searchedMember = self.searchMemberOfClassByName(classDecl, fieldname)
             if searchedMember is None or not isinstance(searchedMember, memDeclType):
-                errorKind = (
-                    Attribute() if isinstance(memDeclType, AttributeDecl) else Method()
-                )
+                errorKind = Attribute() if memDeclType == AttributeDecl else Method()
                 raise Undeclared(errorKind, fieldname)
             if not isinstance(searchedMember.kind, Static):
                 raise IllegalMemberAccess(ast)

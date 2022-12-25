@@ -914,9 +914,19 @@ class CheckerSuite(unittest.TestCase):
     def test_76(self):
         input = """
         class Ex {
-            static int a;
             final int x = Ex.a;
+            static int a;
         }
         """
         expect = "Illegal Constant Expression: FieldAccess(Id(Ex),Id(a))"
         self.assertTrue(TestChecker.test(input, expect, 475))
+
+    def test_77(self):
+        input = """
+        class Ex {
+            final int x = Ex.a;
+            static int b;
+        }
+        """
+        expect = "Undeclared Attribute: a"
+        self.assertTrue(TestChecker.test(input, expect, 476))
