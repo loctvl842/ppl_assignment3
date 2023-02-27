@@ -556,6 +556,13 @@ class StaticChecker(BaseVisitor):
             classScopeDecls.append(checkedMember)
             if isinstance(mem, MethodDecl):
                 self.stack_scopeType.pop()
+        # if parentname != "":
+        #     parentClass = self.searchClassByName(parentname)
+        #     classMembers = parentClass.memlist
+        #     for mem in classMembers:
+        #         memName = self.getASTName(mem)
+        #         if self.searchDeclByName(memName):
+        #             Continue
         return ast
 
     def visitMethodDecl(
@@ -608,6 +615,7 @@ class StaticChecker(BaseVisitor):
 
         # check Redeclared attribute in Class scope
         attributeName = self.getASTName(ast)
+        print(self.getASTName(ast.decl))
         if attributeName in memDeclNames:
             raise Redeclared(Attribute(), attributeName)
 
